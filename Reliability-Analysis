@@ -1,0 +1,83 @@
+# Cronbach Alpha Function:
+
+def cronbach_alpha(items):
+    items_count = items.shape[1]
+    variance_sum = float(items.var(axis=0, ddof=1).sum())
+    total_var = float(items.sum(axis=1).var(ddof=1))
+
+    return (items_count / float(items_count - 1) *
+            (1 - variance_sum / total_var))
+
+
+F1= df[['A3','A4', 'C2', 'C3', 'C4', 'C5', 'D1', 'D2', 'D3']]
+
+cronbach_alpha(F1)
+
+
+# Reliability Analysis Function:
+
+
+def reliability_analysis(df, report =False):
+    """
+    
+    # param df: df
+    The factor dataframe to be analyzed
+    
+    # param report: bool
+    True to see cronbach alpha values of factors and if deleted tables 
+    before and after the analysis
+    
+    # return: CA, cronbach_list, CA_new, cronbach_list_new
+    
+    CA: Cronbach Alpha before reliability analysis
+    cronbach_list: CA if deleted 
+    CA_new: Cronbach Alpha after reliability analysis
+    cronbach_list_new: CA if deleted after reliability analysis
+    
+    Example:
+        CA, cronbach_list, CA_new, cronbach_list_new = reliability_analysis(F2, report=True)
+
+    
+    """
+    CA = cronbach_alpha(df)
+    drop_list = []
+    cronbach_list = {}
+    cronbach_list_new = {}
+
+    for col in df:
+        drop_df = df.loc[:, df.columns != col]
+        # val = cronbach_alpha(drop_f1)
+        cronbach_list[col] = cronbach_alpha(drop_df)
+
+    for col, val in zip(cronbach_list.keys(), cronbach_list.values()):
+        if val > CA:
+            drop_list.append(col)
+    drop_df1 = [col for col in df if col not in drop_list]
+    new_df = df[drop_df1]
+    CA_new = cronbach_alpha(new_df)
+
+    for col in new_df:
+        drop_df2 = new_df.loc[:, new_df.columns != col]
+        # val = cronbach_alpha(drop_f1)
+        cronbach_list_new[col] = cronbach_alpha(drop_df2)
+
+    cronbach_list = pd.DataFrame.from_dict(cronbach_list, orient='index', columns=['CA if Deleted'])
+    cronbach_list_new = pd.DataFrame.from_dict(cronbach_list_new, orient='index', columns=['CA if Deleted'])
+
+    if report:
+
+        print(f'\n\nCronbachs Alpha: {CA}\n',
+              f'N Items: {df.shape[1]}\n'
+              f'Cronbachs Alpha if Item Deleted:')
+        print(cronbach_list)
+
+        print(f'\n\nCronbachs Alpha: {CA_new}\n',
+              f'N Items: {new_df.shape[1]}\n'
+              f'Cronbachs Alpha if Item Deleted:')
+        print(f'{cronbach_list_new}\n\n\n')
+
+    return CA, cronbach_list, CA_new, cronbach_list_new
+
+
+CA, cronbach_list, CA_new, cronbach_list_new = reliability_analysis(F1, report=True)
+
